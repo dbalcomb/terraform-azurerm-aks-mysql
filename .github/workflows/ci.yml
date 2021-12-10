@@ -1,0 +1,47 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches:
+    - master
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.0.10
+
+    - name: Lint
+      run: terraform fmt -check -diff -recursive
+
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example:
+        - basic
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.0.10
+
+    - name: Initialize
+      run: terraform init -input=false -backend=false
+      working-directory: ./examples/${{ matrix.example }}
+
+    - name: Validate
+      run: terraform validate
+      working-directory: ./examples/${{ matrix.example }}
